@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:formularios_2/widgets/infraestructure/models/usuario.dart';
 
 class FormRegister extends StatefulWidget {
   const FormRegister({super.key});
@@ -18,13 +19,8 @@ class _FormRegisterState extends State<FormRegister> {
   String? _sexoSeleccionado;
   
   // Map para las aficiones con su estado inicial (false = no seleccionado)
-  final Map<String, bool> _aficiones = {
-    'Deportes': false,
-    'Lectura': false,
-    'Cocinar': false,
-    'Videojuegos': false,
-    'Viajar': false,
-  };
+  final List<String> _aficiones = ['Deportes', 'Lectura', 'Cocinar', 'Videojuegos', 'Viajar'];
+  final List<bool> _aficionesSeleccionadas = List.generate(5, (_) => false);
 
   String? _validarSexo() {
     if (_sexoSeleccionado == null) {
@@ -32,7 +28,6 @@ class _FormRegisterState extends State<FormRegister> {
     }
     return null;
   }
-
 
   @override
   void dispose() {
@@ -181,39 +176,67 @@ class _FormRegisterState extends State<FormRegister> {
                     style: const TextStyle(color: Colors.red),
                   ),
                 ),
+
               const SizedBox(height: 10),
-              Column(
-                children: _aficiones.keys.map((String key) {
-                  return CheckboxListTile(
-                    title: Text(key),
-                    value: _aficiones[key],
-                    onChanged: (bool? value) {
-                      setState(() {
-                        _aficiones[key] = value ?? false;
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
+
+            const Text("Aficiones:", style: TextStyle(fontSize: 18)),
+            ..._aficiones.asMap().entries.map<Widget>((dynamic entry) {
+              final index = entry.key;
+              final aficion = entry.value;
+              return CheckboxListTile(
+                title: Text(aficion),
+                value: _aficionesSeleccionadas[index],
+                onChanged: (bool? value) {
+                  setState(() {
+                    _aficionesSeleccionadas[index] = value ?? false;
+                  });
+                },
+              );
+            }),
             const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
+            ElevatedButton(
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  if (!_aficionesSeleccionadas.contains(true)) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Usuario registrado')),
+                      const SnackBar(content: Text("Debes seleccionar al menos una afición")),
+                    );
+                  } else {
+                    final usuario = Usuario(
+                      nombre: _nombreController.text,
+                      apellidos: _apellidosController.text,
+                      edad: int.parse(_edadController.text),
+                      correo: _correoController.text,
+                      sexo: _sexoSeleccionado!,
+                      aficiones: _aficiones
+                          .asMap()
+                          .entries
+                          .where((entry) => _aficionesSeleccionadas[entry.key])
+                          .map((entry) => entry.value)
+                          .toList(),
                     );
 
-                    // Limpiar los campos después del registro
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Usuario registrado")),
+                    );
+
+                    print(usuario); // Mostrar el usuario en consola
+                  
+                    // Limpiar los campos después de enviar
                     _nombreController.clear();
                     _apellidosController.clear();
                     _edadController.clear();
                     _correoController.clear();
+                    _sexoSeleccionado = null;
+                    _aficionesSeleccionadas.fillRange(0, _aficionesSeleccionadas.length, false);
+
+                    // Forzar la actualización de la interfaz
+                    setState(() {});
+                  
                   }
-                },
-                child: const Text('Registrar usuario'),
-              ),
+                }
+              },
+              child: const Text('Enviar'),
             ),
           ],
         ),
