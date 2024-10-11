@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:robot_pepe/widgets/dialog_alert_widget.dart';
 
 /*
 Aqui iniciamos una nueva clse llamada RobotsGenerator 
@@ -23,6 +24,7 @@ Aqui definimos la clase que maneja  el estado RobotsGenerator
 class _RobotsGeneratorState extends State<RobotsGenerator> {
   //Siempre se introduce -Dicho por Pepe-
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _controladorNombreRobot = TextEditingController();
   // Creamos dos variables para guardar el nombre introducido y la url
   String? _robotName;
   String _imageUrl = '';
@@ -49,30 +51,24 @@ class _RobotsGeneratorState extends State<RobotsGenerator> {
             en una fila, con esto podemos introducir el text(label) 
             en la misma fila que el textFormField.
             */
-            Row(
-              children: [
-                const Text('Nombre:', style: TextStyle(fontSize: 18)),
-                //añadimos un espacio entre el label y el input.
-                const SizedBox(width: 10),
-                //con expanded permitimos que el input oucpe el resto disponible en la fila
-                Expanded(
-                  //TextFormField, input, campo de entrada.
-                  child: TextFormField(
-                    /* 
+
+            TextFormField(
+              /* 
                     validator: Es una función que se llama al validar el formulario. 
                     Devuelve un mensaje de error si el campo está vacío. Si no hay 
                     error, devuelve null.
                     */
-                    validator: (String? value) {
-                      if (value == null || value.isEmpty) {
-                        return 'El nombre es obligatorio';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-              ],
+              decoration: const InputDecoration(
+                  label: Text('Nombre:', style: TextStyle(fontSize: 18))),
+              controller: _controladorNombreRobot,
+              validator: (String? value) {
+                if (value == null || value.isEmpty) {
+                  return 'El nombre es obligatorio';
+                }
+                return null;
+              },
             ),
+
             const SizedBox(height: 10),
             //align, alineamos el boton a la derecha de la pantalla
             Align(
@@ -80,17 +76,19 @@ class _RobotsGeneratorState extends State<RobotsGenerator> {
               //tipo de boton que se puede presionar
               child: ElevatedButton(
                 //definimos su comportamiento con la funcion onPressed
-                onPressed: () {
+                onPressed: () async {
                   //validamos que el formulario sea valido
                   if (_formKey.currentState!.validate()) {
                     //llamamos a la url para actualizar la UI
                     setState(() {
+                      _robotName = _controladorNombreRobot.text;
                       _imageUrl = 'https://robohash.org/$_robotName';
                     });
+                    final resultado = await _mostrarAlerta(true, _robotName!);
+                    debugPrint(resultado);
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Debe introducir un nombre para generar el robot')),
-                    );
+                    final resultado = await _mostrarAlerta(false, "erroneo");
+                    debugPrint(resultado);
                   }
                 },
                 child: const Text('Generar Robot'),
@@ -100,7 +98,7 @@ class _RobotsGeneratorState extends State<RobotsGenerator> {
             const SizedBox(height: 20),
             //comprobamos que la imagen no este vacia
             if (_imageUrl.isNotEmpty)
-            //centramos la imgaen en la pantalla
+              //centramos la imgaen en la pantalla
               Center(
                 //con image.network, cargamos y mostramos la imagen desde la url
                 child: Image.network(
@@ -113,6 +111,18 @@ class _RobotsGeneratorState extends State<RobotsGenerator> {
           ],
         ),
       ),
+    );
+  }
+
+  Future<String?> _mostrarAlerta(bool resultado, String textoAMostrar) async {
+    return await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return DialogAlertWidget(
+          resultado: resultado,
+          textoAMostrar: textoAMostrar,
+        );
+      },
     );
   }
 }
