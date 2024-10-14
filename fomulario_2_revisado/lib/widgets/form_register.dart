@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/widgets/infraestructure/models/usuario.dart';
+import 'package:flutter_application_1/widgets/dialog_alert_widget.dart';
 
 class FormRegister extends StatefulWidget {
   const FormRegister({super.key});
@@ -26,13 +27,6 @@ class _FormRegisterState extends State<FormRegister> {
     'Viajar'
   ];
   final List<bool> _aficionesSeleccionadas = List.generate(5, (_) => false);
-
-  String? _validarSexo() {
-    if (_sexoSeleccionado == null) {
-      return 'Por favor, selecciona un sexo';
-    }
-    return null;
-  }
 
   @override
   void dispose() {
@@ -177,11 +171,13 @@ class _FormRegisterState extends State<FormRegister> {
                           content:
                               Text("Debes seleccionar al menos una afición")),
                     );
-                  } else if (_validarSexo() == null) {
+                    _mostrarAlerta(false);
+                  } else if (_sexoSeleccionado == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                           content: Text("Debes seleccionar el sexo")),
                     );
+                    _mostrarAlerta(false);
                   } else {
                     final usuario = Usuario(
                       nombre: _nombreController.text,
@@ -201,20 +197,22 @@ class _FormRegisterState extends State<FormRegister> {
                       const SnackBar(content: Text("Usuario registrado")),
                     );
 
-                    print(usuario); // Mostrar el usuario en consola
+                    _mostrarAlerta(true, usuario);
 
                     // Limpiar los campos después de enviar
-                    _nombreController.clear();
-                    _apellidosController.clear();
-                    _edadController.clear();
-                    _correoController.clear();
-                    _sexoSeleccionado = null;
-                    _aficionesSeleccionadas.fillRange(
-                        0, _aficionesSeleccionadas.length, false);
+                    // _nombreController.clear();
+                    // _apellidosController.clear();
+                    // _edadController.clear();
+                    // _correoController.clear();
+                    // _sexoSeleccionado = null;
+                    // _aficionesSeleccionadas.fillRange(
+                    //     0, _aficionesSeleccionadas.length, false);
 
                     // Forzar la actualización de la interfaz
                     setState(() {});
                   }
+                } else {
+                  _mostrarAlerta(false);
                 }
               },
               child: const Text('Enviar'),
@@ -222,6 +220,18 @@ class _FormRegisterState extends State<FormRegister> {
           ],
         ),
       ),
+    );
+  }
+
+  Future<String?> _mostrarAlerta(bool resultado, [Usuario? usuario]) async {
+    return await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return DialogAlertWidget(
+          resultado: resultado,
+          usuario: usuario,
+        );
+      },
     );
   }
 }
