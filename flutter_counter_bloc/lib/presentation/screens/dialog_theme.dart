@@ -4,14 +4,28 @@ import 'package:flutter_counter_bloc/presentation/blocs/tema/tema_bloc.dart'; //
 import 'package:flutter_counter_bloc/config/theme/app_theme.dart';
 import 'package:flutter_counter_bloc/presentation/blocs/tema/tema_event.dart'; // Asegúrate de que la ruta sea correcta
 
-class ThemeSelector extends StatelessWidget {
-  const ThemeSelector({Key? key}) : super(key: key);
+class ThemeSelector extends StatefulWidget {
+  const ThemeSelector({super.key});
+
+  @override
+  _ThemeSelectorState createState() => _ThemeSelectorState();
+}
+
+class _ThemeSelectorState extends State<ThemeSelector> {
+  late int _tempSelectedColor;
+  late bool _tempDarkMode;
+
+  @override
+  void initState() {
+    super.initState();
+    // Inicializa los valores temporales con los valores actuales del tema
+    final temaState = context.read<TemaBloc>().state;
+    _tempSelectedColor = temaState.selectedColor;
+    _tempDarkMode = temaState.isDarkMode;
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Obtener el estado actual del TemaBloc
-    final temaState = context.watch<TemaBloc>().state;
-
     return Dialog(
       child: SizedBox(
         width: 300,
@@ -28,29 +42,25 @@ class ThemeSelector extends StatelessWidget {
             ),
             SwitchListTile(
               title: const Text('Modo oscuro'),
-              value: temaState.isDarkMode,
+              value: _tempDarkMode,
               onChanged: (bool value) {
-                context.read<TemaBloc>().add(ChangeThemeEvent(
-                      selectedColor: temaState.selectedColor,
-                      isDarkMode: value,
-                    ));
+                setState(() {
+                  _tempDarkMode = value;
+                });
               },
             ),
             const Padding(
               padding: EdgeInsets.all(16.0),
               child: Text("Seleccionar color:"),
             ),
-            //contenedor para organizar los hijos en multiple lineas
             Wrap(
               spacing: 16.0,
               children: List<Widget>.generate(colorList.length, (index) {
                 return ElevatedButton(
                   onPressed: () {
-                    context.read<TemaBloc>().add(ChangeThemeEvent(
-                          selectedColor:
-                              index, // El índice del color seleccionado
-                          isDarkMode: temaState.isDarkMode,
-                        ));
+                    setState(() {
+                      _tempSelectedColor = index;
+                    });
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colorList[index],
@@ -64,6 +74,11 @@ class ThemeSelector extends StatelessWidget {
               children: [
                 TextButton(
                   onPressed: () {
+                    // Aplica los cambios al Bloc solo al presionar "Guardar"
+                    context.read<TemaBloc>().add(ChangeThemeEvent(
+                          selectedColor: _tempSelectedColor,
+                          isDarkMode: _tempDarkMode,
+                        ));
                     Navigator.of(context).pop();
                   },
                   child: const Text("Guardar"),
