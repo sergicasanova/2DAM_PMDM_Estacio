@@ -25,7 +25,21 @@ class _CharacterScreenState extends State<CharactersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text('Personajes de Harry Potter')),
+        appBar: AppBar(
+          title: const Text('Personajes de Harry Potter'),
+          // creamos un blobuilder donde obtener el numero total de characters encontrados con el .length
+          actions: [
+            BlocBuilder<CharacterBloc, CharacterState>(
+                builder: (context, state) {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text("Personajes encontrados: ${state.characters.length}"),
+                ],
+              );
+            }),
+          ],
+        ),
         body: Column(
           children: [
             Padding(
